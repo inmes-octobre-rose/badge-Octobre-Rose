@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Personnalise ton flyer — Octobre Rose INMeS</title>
+<style>
+:root{--pink:#f33c91;--ink:#222}*{box-sizing:border-box}body{margin:0;background:#f5f5f7;color:var(--ink);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:980px;margin:auto;padding:20px}.panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 18px #0000000d}h1{font-size:1.45rem;margin:0 0 8px}p{line-height:1.45;color:#555}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:16px 0}.file{display:inline-block;background:var(--pink);color:#fff;padding:12px 16px;border-radius:10px;font-weight:700;cursor:pointer}input[type=file]{display:none}button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer;background:#222;color:white}button.secondary{background:#eee;color:#222}button:disabled{opacity:.4;cursor:not-allowed}.preview{width:100%;max-width:720px;margin:0 auto;display:block;border-radius:8px;background:#ddd}label.zoom{display:flex;gap:10px;align-items:center}input[type=range]{accent-color:var(--pink)}.hint{font-size:.9rem}.foot{font-size:.8rem;text-align:center;color:#777;margin:14px 0 0}@media(max-width:600px){.wrap{padding:10px}.panel{padding:14px}h1{font-size:1.2rem}.controls>*{flex:1 1 100%;text-align:center}.file{width:100%}}
+</style></head>
+<body><main class="wrap"><section class="panel">
+<h1>Personnalise ton flyer — Octobre Rose avec l’INMeS</h1>
+<p>Importe ta photo, déplace-la dans la zone noire pour bien cadrer ton visage, puis télécharge ton flyer personnalisé. Le modèle officiel reste inchangé.</p>
+<div class="controls"><label class="file" for="photo">📷 Choisir ma photo</label><input id="photo" type="file" accept="image/*"><label class="zoom">Zoom <input id="zoom" type="range" min="0.7" max="2.5" value="1" step="0.01"></label><button id="download" disabled>⬇ Télécharger mon flyer</button><button id="reset" class="secondary" disabled>Recentrer</button></div>
+<canvas id="canvas" class="preview" width="1536" height="1536" aria-label="Aperçu du flyer personnalisé"></canvas>
+<p class="hint">Astuce : après avoir choisi la photo, fais glisser l’image dans l’aperçu pour ajuster son cadrage. Le traitement se fait dans ton navigateur.</p>
+</section><p class="foot">INMeS • Octobre Rose 2026</p></main>
+<script>
+const template=new Image();template.src='modele-octobre-rose.jpg';
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');const file=document.getElementById('photo'),zoom=document.getElementById('zoom'),download=document.getElementById('download'),reset=document.getElementById('reset');
+let photo=null,scale=1,offsetX=0,offsetY=0,dragging=false,lastX=0,lastY=0;
+// Zone intérieure de la grande forme noire, légèrement en retrait pour conserver son contour rose et son ombrage.
+const poly=[[112,258],[1278,183],[1425,1138],[143,1190]];
+function draw(){ctx.clearRect(0,0,1536,1536);if(!template.complete||!template.naturalWidth)return;
+ctx.drawImage(template,0,0,1536,1536);
+if(photo){ctx.save();ctx.beginPath();ctx.moveTo(...poly[0]);for(let i=1;i<poly.length;i++)ctx.lineTo(...poly[i]);ctx.closePath();ctx.clip();
+const base=Math.max(1165/photo.width,955/photo.height);const s=base*scale;const w=photo.width*s,h=photo.height*s;const x=(1536-w)/2+offsetX,y=(1536-h)/2+offsetY;
+ctx.drawImage(photo,x,y,w,h);ctx.restore();}
+}
+template.onload=draw;
+file.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(!f.type.startsWith('image/'))return;const url=URL.createObjectURL(f);const im=new Image();im.onload=()=>{photo=im;scale=1;offsetX=0;offsetY=0;zoom.value='1';download.disabled=false;reset.disabled=false;draw();URL.revokeObjectURL(url)};im.src=url;});
+zoom.addEventListener('input',()=>{scale=Number(zoom.value);draw()});
+function point(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
+canvas.addEventListener('pointerdown',e=>{if(!photo)return;dragging=true;lastX=point(e).x;lastY=point(e).y;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!dragging)return;const p=point(e);offsetX+=p.x-lastX;offsetY+=p.y-lastY;lastX=p.x;lastY=p.y;draw()});
+canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
+reset.addEventListener('click',()=>{scale=1;offsetX=0;offsetY=0;zoom.value='1';draw()});
+download.addEventListener('click',()=>{if(!photo)return;const a=document.createElement('a');a.download='flyer-octobre-rose-INMeS-personnalise.png';a.href=canvas.toDataURL('image/png');a.click()});
+</script></body></html>
